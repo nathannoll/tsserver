@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="dashboard-box">
+            <h2>Welcome, <span id="username"></span>!</h2>
+            <form action="/logout" method="POST">
+                <button type="submit">Logout</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Fetch username from session and display it
+        fetch('/get-username')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('username').textContent = data.username;
+            })
+            .catch(error => {
+                console.error('Error fetching username:', error);
+            });
+    </script>
+</body>
+</html>

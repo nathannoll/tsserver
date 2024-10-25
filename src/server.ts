@@ -1,21 +1,47 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
+import path from 'path';
+import session from 'express-session';
+import { MongoClient } from 'mongodb';
+import authRoutes from './routes/auth'; 
 
 const app = express();
-const PORT = 3000;
 
+// MongoDB connection
+const uri = "mongodb+srv://nathannoll:4kfzJAoImajfhXk3@cluster1.ag1rc.mongodb.net/?retryWrites=true&w=majority&&appname=cluster1";
+const client = new MongoClient(uri);
 
-let i = 0;
+let db;
 
-// Basic route
-app.get('/', (req: Request, res: Response) => {
-  res.send(`Hello, TypeScript with ESNext on Node.js!${i++}`);
+// Middleware setup
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.static(path.join(__dirname, '../public')));
+app.use(session({
+    secret: 'your_secret_key',
+    resave: false,
+    saveUninitialized: true,
+}));
+
+// Serve login page by default
+app.get('/', (req, res) => {
+  res.redirect('/login.html');
 });
 
-app.get('/bat', (req: Request, res: Response) => {
-  res.send(`Hello, Bat with ESNext on Node.js!${i++}`);
-});
+// Connect to MongoDB and pass the db instance to the routes
+client.connect()
+    .then(() => {
+        db = client.db('tsserver');
+        console.log("Connected to MongoDB");
 
-// Start the server
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
+        app.use('/', authRoutes(db));
+
+        const PORT = process.env.PORT || 3000;
+        app.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
+        });
+    })
+    .catch(err => {
+        console.error("MongoDB connection error: ", err);
+    });
+
+export default app;
